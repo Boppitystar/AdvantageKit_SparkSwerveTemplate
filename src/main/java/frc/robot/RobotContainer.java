@@ -18,6 +18,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
@@ -28,9 +29,9 @@ import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.vision.*;
 import frc.robot.util.sim.FuelSim;
 import frc.robot.util.sim.RobotBumpSim;
+import java.util.function.BooleanSupplier;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
-import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnFly;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -105,18 +106,16 @@ public class RobotContainer {
 
         fuelSim.enableAirResistance();
         fuelSim.start();
-
-        fuelSim.registerRobot(
-            Constants.BUMPER_WIDTH,
-            Constants.BUMPER_WIDTH,
-            Inches.of(6),
-            () -> driveSimulation.getSimulatedDriveTrainPose(),
-            () -> driveSimulation.getDriveTrainSimulatedChassisSpeedsFieldRelative());
-
-        fuelSim.registerIntake(
-            Inches.of(15), Inches.of(22), Inches.of(-15), Inches.of(15), () -> true, () -> {});
-
+        configureFuelSimRobot(() -> true, () -> {});
         fuelSim.spawnStartingFuel();
+        SmartDashboard.putData(
+            Commands.runOnce(
+                    () -> {
+                      fuelSim.clearFuel();
+                      fuelSim.spawnStartingFuel();
+                    })
+                .withName("Reset Fuel")
+                .ignoringDisable(true));
         break;
 
       default:
@@ -192,16 +191,16 @@ public class RobotContainer {
     // Switch to X pattern when X button is pressed
     controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
-    // // Reset gyro to 0° when B button is pressed
-    // controller
-    //     .b()
-    //     .onTrue(
-    //         Commands.runOnce(
-    //                 () ->
-    //                     drive.setPose(
-    //                         new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
-    //                 drive)
-    //             .ignoringDisable(true));
+    // Reset gyro to 0° when B button is pressed
+    controller
+        .b()
+        .onTrue(
+            Commands.runOnce(
+                    () ->
+                        drive.setPose(
+                            new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
+                    drive)
+                .ignoringDisable(true));
 
     // Reset gyro / odometry
     final Runnable resetGyro =
@@ -229,45 +228,6 @@ public class RobotContainer {
                 () -> -controller.getLeftX(),
                 () -> aimController.calculate(vision.getTargetX(0).getRadians())));
 
-    // Example Coral Placement Code
-    // TODO: delete these code for your own project
-    if (Constants.currentMode == Constants.Mode.SIM) {
-      // L4 placement
-      controller
-          .y()
-          .onTrue(
-              Commands.runOnce(
-                  () ->
-                      SimulatedArena.getInstance()
-                          .addGamePieceProjectile(
-                              new ReefscapeCoralOnFly(
-                                  driveSimulation.getSimulatedDriveTrainPose().getTranslation(),
-                                  new Translation2d(0.4, 0),
-                                  driveSimulation
-                                      .getDriveTrainSimulatedChassisSpeedsFieldRelative(),
-                                  driveSimulation.getSimulatedDriveTrainPose().getRotation(),
-                                  Meters.of(2),
-                                  MetersPerSecond.of(1.5),
-                                  Degrees.of(-80)))));
-      // L3 placement
-      controller
-          .b()
-          .onTrue(
-              Commands.runOnce(
-                  () ->
-                      SimulatedArena.getInstance()
-                          .addGamePieceProjectile(
-                              new ReefscapeCoralOnFly(
-                                  driveSimulation.getSimulatedDriveTrainPose().getTranslation(),
-                                  new Translation2d(0.4, 0),
-                                  driveSimulation
-                                      .getDriveTrainSimulatedChassisSpeedsFieldRelative(),
-                                  driveSimulation.getSimulatedDriveTrainPose().getRotation(),
-                                  Meters.of(1.35),
-                                  MetersPerSecond.of(1.5),
-                                  Degrees.of(-60)))));
-    }
-
     if (Constants.currentMode == Constants.Mode.SIM)
       controller.x().whileTrue(Commands.runOnce(() -> fuelSim.clearFuel()));
   }
@@ -288,6 +248,8 @@ public class RobotContainer {
     // SimulatedArena.getInstance().resetFieldForAuto();
     fuelSim.clearFuel();
     fuelSim.spawnStartingFuel();
+    FuelSim.Hub.BLUE_HUB.resetScore(); // resets the score of the blue hub
+    FuelSim.Hub.RED_HUB.resetScore(); // resets the score of the red hub
   }
 
   public void updateSimulationToAdvantageScope() {
@@ -308,10 +270,22 @@ public class RobotContainer {
           robotBumpSim.getSimWorldPose(driveSimulation.getSimulatedDriveTrainPose()));
     }
     Logger.recordOutput("FieldSimulation/Pose3d", simPose3d);
-    // Logger.recordOutput(
-    //     "FieldSimulation/Fuel", SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
+    FuelSim.Hub.BLUE_HUB.getScore(); // get number of fuel scored in blue hub
+    FuelSim.Hub.RED_HUB.getScore(); // get number of fuel scored in red hub
+
     // Logger.recordOutput("ferry2",new Translation2d(2,1));
     // Logger.recordOutput("ferrydistance", turret.getDistanceToPoint(new Translation2d(2,7)));
     // TODO: add shooter
+  }
+
+  private void configureFuelSimRobot(BooleanSupplier ableToIntake, Runnable intakeCallback) {
+    fuelSim.registerRobot(
+        Constants.BUMPER_WIDTH,
+        Constants.BUMPER_WIDTH,
+        Inches.of(6),
+        () -> driveSimulation.getSimulatedDriveTrainPose(),
+        () -> driveSimulation.getDriveTrainSimulatedChassisSpeedsFieldRelative());
+    fuelSim.registerIntake(
+        Inches.of(15), Inches.of(22), Inches.of(-15), Inches.of(15), () -> true, () -> {});
   }
 }

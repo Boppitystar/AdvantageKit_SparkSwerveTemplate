@@ -10,6 +10,7 @@ package frc.robot;
 import com.revrobotics.util.StatusLogger;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import org.ironmaple.simulation.SimulatedArena;
 // import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnFly;
 /// import org.ironmaple.simulation.seasonspecific.rebuilt2026.*;
 // import org.ironmaple.simulation.seasonspecific.rebuilt2026.Arena2026Rebuilt;
@@ -101,7 +102,7 @@ public class Robot extends LoggedRobot {
   /** This function is called once when the robot is disabled. */
   @Override
   public void disabledInit() {
-    //robotContainer.resetSimulationField();
+    robotContainer.resetSimulationField();
   }
 
   /** This function is called periodically when disabled. */
@@ -157,9 +158,10 @@ public class Robot extends LoggedRobot {
   /** This function is called periodically whilst in simulation. */
   @Override
   public void simulationPeriodic() {
-    // SimulatedArena.getInstance().simulationPeriodic(); // TODO: DO NOT CALL WHEN RUNNING REAL
-    // ROBOT
-    // RobotContainer.fuelSim.updateSim();
-    // robotContainer.updateSimulationToAdvantageScope();
+    SimulatedArena.getInstance().simulationPeriodic(); // TODO: DO NOT CALL WHEN RUNNING REAL ROBOT
+
+    RobotContainer.fuelSim.updateSim();
+
+    robotContainer.updateSimulationToAdvantageScope();
   }
 }
