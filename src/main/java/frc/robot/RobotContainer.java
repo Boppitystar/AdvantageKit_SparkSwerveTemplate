@@ -193,7 +193,6 @@ public class RobotContainer {
                 () -> -controller.getLeftY(),
                 () -> -controller.getLeftX(),
                 () -> aimController.calculate(vision.getTargetX(0).getRadians())));
-
   }
 
   /**

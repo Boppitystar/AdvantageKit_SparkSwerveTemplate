@@ -8,8 +8,11 @@
 package frc.robot;
 
 import com.revrobotics.util.StatusLogger;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import java.io.File;
+import java.util.Optional;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -29,6 +32,7 @@ public class Robot extends LoggedRobot {
   private RobotContainer robotContainer;
 
   public Robot() {
+    DriverStation.silenceJoystickConnectionWarning(true);
     // Record metadata
     Logger.recordMetadata("ProjectName", BuildConstants.MAVEN_NAME);
     Logger.recordMetadata("BuildDate", BuildConstants.BUILD_DATE);
@@ -46,8 +50,25 @@ public class Robot extends LoggedRobot {
     // Set up data receivers & replay source
     switch (Constants.currentMode) {
       case REAL:
-        // Running on a real robot, log to a USB stick ("/U/logs")
-        Logger.addDataReceiver(new WPILOGWriter());
+        // Running on a real robot, try to log to a USB stick ("/U/logs") or fallback
+        Optional<String> writableLogDir = findWritableLogDir();
+        if (writableLogDir.isPresent()) {
+          try {
+            Logger.addDataReceiver(new WPILOGWriter(writableLogDir.get()));
+          } catch (Exception ex) {
+            // Report the actual exception so you can troubleshoot (permissions, filesystem, etc.)
+            DriverStation.reportError(
+                "WPILOGWriter failed to start: "
+                    + ex.getClass().getSimpleName()
+                    + ": "
+                    + ex.getMessage(),
+                false);
+          }
+        } else {
+          // No writable directory found; skip file logging to avoid exceptions
+          DriverStation.reportWarning(
+              "No writable log directory found; WPILOGWriter disabled.", false);
+        }
         Logger.addDataReceiver(new NT4Publisher());
         break;
 
@@ -75,6 +96,32 @@ public class Robot extends LoggedRobot {
     // Instantiate our RobotContainer. This will perform all our button bindings,
     // and put our autonomous chooser on the dashboard.
     robotContainer = new RobotContainer();
+  }
+
+  /**
+   * Find a writable log directory to use for WPILOG output. Tries common roboRIO locations.
+   *
+   * @return an Optional containing the directory path if writable, otherwise empty
+   */
+  private Optional<String> findWritableLogDir() {
+    // Only allow external USB (/U) locations here so we do NOT log to internal roboRIO storage
+    String[] candidates = new String[] {"/U/logs", "/U"};
+    for (String path : candidates) {
+      try {
+        File f = new File(path);
+        if (!f.exists()) continue;
+        if (f.isDirectory() && f.canWrite()) {
+          // Use an explicit logs subfolder if available
+          File logs = new File(f, "logs");
+          if (logs.exists() && logs.isDirectory() && logs.canWrite()) {
+            return Optional.of(logs.getAbsolutePath());
+          }
+          return Optional.of(f.getAbsolutePath());
+        }
+      } catch (Exception ignored) {
+      }
+    }
+    return Optional.empty();
   }
 
   /** This function is called periodically during all modes. */
@@ -154,7 +201,8 @@ public class Robot extends LoggedRobot {
   /** This function is called periodically whilst in simulation. */
   @Override
   public void simulationPeriodic() {
-    // SimulatedArena.getInstance().simulationPeriodic(); // TODO: DO NOT CALL WHEN RUNNING REAL ROBOT
+    // SimulatedArena.getInstance().simulationPeriodic(); // TODO: DO NOT CALL WHEN RUNNING REAL
+    // ROBOT
 
     // robotContainer.updateSimulationToAdvantageScope();
   }
