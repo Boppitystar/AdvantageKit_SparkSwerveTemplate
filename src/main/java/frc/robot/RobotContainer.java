@@ -47,6 +47,7 @@ public class RobotContainer {
 
   // Controller
   private final CommandXboxController driverController = new CommandXboxController(0);
+  private final CommandXboxController operatorController = new CommandXboxController(1);
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
@@ -241,10 +242,21 @@ public class RobotContainer {
     driverController.rightBumper().whileTrue(shooter.shootManualCommand());
 
     driverController.leftBumper().whileTrue(pivot.runIntakePivotBumpCommand());
-    driverController.x().whileTrue(shooter.runKickerBackwardCommand());
+    // other intake button
+    driverController.x().whileTrue(intake.runIntakeForwardCommand());
     driverController.b().onTrue(intake.runOuttakeCommand());
     driverController.y().whileTrue(shooter.toggleShooterCommand());
     driverController.a().onTrue(shooter.toggleDistanceEstimationCommand());
+
+    // OPERATOR CONTROLS
+    operatorController.y().whileTrue(shooter.toggleShooterCommand());
+    operatorController.rightTrigger().onTrue(shooter.setLadderShotCommand());
+    operatorController.b().onTrue(shooter.setHubShotCommand());
+    operatorController.a().onTrue(shooter.setTrenchShotCommand());
+    operatorController.x().onTrue(shooter.toggleDistanceEstimationCommand());
+    operatorController.rightBumper().onTrue(shooter.increaseShootingRPMOffsetCommand());
+    operatorController.leftBumper().onTrue(shooter.decreaseShootingRPMOffsetCommand());
+    operatorController.leftTrigger().onTrue(shooter.toggleKinematicsEstimationCommand());
   }
 
   /**

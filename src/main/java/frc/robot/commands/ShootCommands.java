@@ -30,6 +30,7 @@ public class ShootCommands {
             .getAngle();
   }
 
+  // gets the distance from the hub to the robot
   public static double getShotDistance(Translation2d targetPose, Drive drive) {
     Pose2d odometryPose = drive.getPose();
     double shooterToTargetMeters = odometryPose.getTranslation().getDistance(targetPose);

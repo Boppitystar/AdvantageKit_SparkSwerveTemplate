@@ -31,7 +31,8 @@ public final class ShooterConstants {
   public static final double KICKER_REVERSED_SPEED = -1.0;
   public static final double SHOOTER_SPEED = 0.7;
   public static final double RPM_OFFSET_INCREMENT = 200;
-  public static final double VELOCITY_TOLERANCE = 2000; //TODO: either RETUNE regression or reduce this
+  public static final double VELOCITY_TOLERANCE =
+      2000; // TODO: either RETUNE regression or reduce this
 
   // Set RPM for certain distances to Hub
   public static final double HUB_TARGET_RPM = 4500;

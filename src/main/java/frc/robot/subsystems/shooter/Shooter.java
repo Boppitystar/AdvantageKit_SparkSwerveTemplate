@@ -39,6 +39,7 @@ public class Shooter extends SubsystemBase {
 
   // toggable state variables at match start
   private boolean mDistanceEstimationEnabled = true;
+  private boolean mUseKinematicsEstimation = false;
   private boolean mShooterEnabled = false;
   private String shotType = "HUB_SHOT";
 
@@ -274,12 +275,26 @@ public class Shooter extends SubsystemBase {
    *
    * @param newRPM new target RPM
    */
-  // TODO: make it not self referiental
   public void updateRPM(double newRPM) {
     mTargetRPM = newRPM;
   }
 
-  public void updateRPMs() {}
+  /**
+   * Refresh the target RPM for the current mode. When distance estimation is enabled, this drives
+   * either {@link #runShooterKinematics} or {@link #runShooterRegression} (selected by {@link
+   * #toggleKinematicsEstimationCommand}) off the live hub distance. When disabled, {@code
+   * mTargetRPM} is left alone since it's already set directly by the shot-select commands (e.g.
+   * {@link #setHubShotCommand}).
+   */
+  private void updateTargetRPM() {
+    if (mDistanceEstimationEnabled) {
+      if (mUseKinematicsEstimation) {
+        runShooterKinematics(mHubDistanceSupplier.getAsDouble());
+      } else {
+        runShooterRegression(mHubDistanceSupplier.getAsDouble());
+      }
+    }
+  }
 
   /** Increase target RPM by configured increment */
   public void incrementRPM() {
@@ -292,7 +307,6 @@ public class Shooter extends SubsystemBase {
   }
 
   // Commands
-  // TODO: change the logic flow so that there are less commands, MOVE TO ShootCommands following
   // convention and centralized method for setting RPM input
   public Command runShooterAutoCommand() {
     return run(
@@ -392,6 +406,14 @@ public class Shooter extends SubsystemBase {
     return new InstantCommand(() -> mDistanceEstimationEnabled = !mDistanceEstimationEnabled);
   }
 
+  /**
+   * Toggle between the kinematics projectile model and the polynomial regression for distance-based
+   * RPM.
+   */
+  public Command toggleKinematicsEstimationCommand() {
+    return new InstantCommand(() -> mUseKinematicsEstimation = !mUseKinematicsEstimation);
+  }
+
   public Command toggleAutoShooterCommand() {
     return new InstantCommand(() -> mShooterEnabled = true);
   }
@@ -485,12 +507,7 @@ public class Shooter extends SubsystemBase {
   @Override
   public void periodic() {
 
-    // TODO: move these into seperate method that updates here
-    if (mDistanceEstimationEnabled) {
-      runShooterRegression(mHubDistanceSupplier.getAsDouble());
-    } else {
-      updateRPM(mTargetRPM);
-    }
+    updateTargetRPM();
 
     if (mShooterEnabled) {
       setShooterSpeeds(mTargetRPM, mShooterRPMOffset);
@@ -506,6 +523,7 @@ public class Shooter extends SubsystemBase {
     SmartDashboard.putBoolean("Shooter/Shooter Ready", atSpeed);
     SmartDashboard.putBoolean("Shooter/Shooter Toggled", mShooterEnabled);
     SmartDashboard.putBoolean("Shooter/Regression Toggled", mDistanceEstimationEnabled);
+    SmartDashboard.putBoolean("Shooter/Kinematics Estimation Toggled", mUseKinematicsEstimation);
     SmartDashboard.putNumber("Shooter/Kinematics RPM", getKinematicsRPM());
   }
 

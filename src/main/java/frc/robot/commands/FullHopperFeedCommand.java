@@ -27,4 +27,4 @@ public class FullHopperFeedCommand extends SequentialCommandGroup {
         new WaitCommand(0.1),
         new HalfHopperFeedCommand(pivot, intake).repeatedly());
   }
-}
+} // TODO: pretty sure .repeatedly doesnt work
