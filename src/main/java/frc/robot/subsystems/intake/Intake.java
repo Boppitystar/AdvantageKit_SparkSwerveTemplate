@@ -1,23 +1,24 @@
 package frc.robot.subsystems.intake;
 
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
-
+import com.revrobotics.spark.SparkFlex;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Intake extends SubsystemBase {
   private final SparkFlex mIntakeMotor;
 
-  //TODO: ADD comments 
+  // TODO: ADD comments
   public Intake() {
     mIntakeMotor = new SparkFlex(IntakeConstants.INTAKE_MOTOR_ID, MotorType.kBrushless);
 
-    mIntakeMotor.configure(IntakeConfig.intakeMotorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-
+    mIntakeMotor.configure(
+        IntakeConfig.intakeMotorConfig,
+        ResetMode.kResetSafeParameters,
+        PersistMode.kPersistParameters);
   }
 
   // Methods

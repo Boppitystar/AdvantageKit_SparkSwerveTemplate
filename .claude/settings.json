@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "deny": [
+      "Edit(./src/main/java/frc/robot/BuildConstants.java)",
+      "Write(./src/main/java/frc/robot/BuildConstants.java)",
+      "Edit(./vendordeps/**)",
+      "Write(./vendordeps/**)",
+      "Edit(./src/main/java/frc/robot/Main.java)",
+      "Write(./src/main/java/frc/robot/Main.java)",
+      "Edit(./src/main/java/frc/robot/Robot.java)",
+      "Write(./src/main/java/frc/robot/Robot.java)",
+      "Edit(./AdvantageScope Swerve Calibration.json)",
+      "Write(./AdvantageScope Swerve Calibration.json)",
+      "Edit(./build.gradle)",
+      "Write(./build.gradle)",
+      "Edit(./gradlew)",
+      "Write(./gradlew)",
+      "Edit(./gradlew.bat)",
+      "Write(./gradlew.bat)",
+      "Edit(./networktables.json)",
+      "Write(./networktables.json)",
+      "Read(./vendordeps/**)",
+      "Read(./AdvantageScope Swerve Calibration.json)"
+    ]
+  }
+}

@@ -1,32 +1,56 @@
 package frc.robot.commands;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GameObjectConstants;
+import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.Pivot;
 import frc.robot.subsystems.shooter.Shooter;
+import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
 public class ShootCommands {
 
-  
-  
-  
-    public static Command runShooterRegressionCommand(Drive drive, Shooter shooter ){
-    double hubShotDistance = getShotDistance(
-    GameObjectConstants.getHubPoseTranslation2D(), drive);
-    return Commands.run(
-        () -> {
-            shooter.runShooterRegression(hubShotDistance);
-        }, drive);
+  private ShootCommands() {}
+
+  /** Continuously computes distance from the robot's current pose to the hub, in meters. */
+  public static DoubleSupplier hubDistanceSupplier(Drive drive) {
+    return () -> getShotDistance(GameObjectConstants.getHubPoseTranslation2D(), drive);
   }
 
+  /** Continuously computes the field-relative bearing from the robot's current pose to the hub. */
+  public static Supplier<Rotation2d> hubHeadingSupplier(Drive drive) {
+    return () ->
+        GameObjectConstants.getHubPoseTranslation2D()
+            .minus(drive.getPose().getTranslation())
+            .getAngle();
+  }
 
-  //TODO: THIS CANT BE STATIC MUST CHANGE ALL THE TIME JUST DO MANUAL SHOT FOR NOW 
-    public static double getShotDistance(Translation2d targetPose, Drive drive){
-      Pose2d odometryPose = drive.getPose();
-      double shooterToTargetMeters = odometryPose.getTranslation().getDistance(targetPose);
-      return shooterToTargetMeters; 
-   }
+  public static double getShotDistance(Translation2d targetPose, Drive drive) {
+    Pose2d odometryPose = drive.getPose();
+    double shooterToTargetMeters = odometryPose.getTranslation().getDistance(targetPose);
+    return shooterToTargetMeters;
+  }
+
+  /**
+   * Auto-aims the drivetrain at the hub while the driver retains translational control, and
+   * continuously spins up + feeds the shooter (regression RPM updates live from odometry) along
+   * with agitating the hopper to feed balls in. Intended for a whileTrue binding.
+   */
+  public static Command autoAimAndShootCommand(
+      Drive drive,
+      Shooter shooter,
+      Pivot pivot,
+      Intake intake,
+      DoubleSupplier xSupplier,
+      DoubleSupplier ySupplier) {
+    return Commands.parallel(
+        DriveCommands.joystickDriveAtAngle(drive, xSupplier, ySupplier, hubHeadingSupplier(drive)),
+        shooter.shootWhileHeldCommand(),
+        new FullHopperFeedCommand(pivot, intake));
+  }
 }

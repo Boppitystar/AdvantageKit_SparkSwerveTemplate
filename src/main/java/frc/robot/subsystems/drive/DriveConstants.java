@@ -11,7 +11,6 @@ import static edu.wpi.first.units.Units.*;
 
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.RobotConfig;
-
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -135,19 +134,21 @@ public class DriveConstants {
                   KilogramSquareMeters.of(0.02),
                   wheelCOF));
 
-    //Locations/pose for scoring hub and depots to collect balls 
-    public static final Pose3d RedHubPose = 
-        new Pose3d(Units.inchesToMeters(469.11), 
-                   Units.inchesToMeters(158.84), 
-                   Units.inchesToMeters(72.0), 
-                   new Rotation3d());
-    public static final Pose3d BlueHubPose = 
-        new Pose3d(Units.inchesToMeters(182.11), 
-                   Units.inchesToMeters(158.84),  
-                   Units.inchesToMeters(72.0), 
-                   new Rotation3d());
-    public static final Pose3d redFerryPoseDepot = new Pose3d(14.3, 6, 0, Rotation3d.kZero);
-    public static final Pose3d redFerryPoseOutpost = new Pose3d(14.3, 2, 0, Rotation3d.kZero);
-    public static final Pose3d blueFerryPoseDepot = new Pose3d(2.1, 2, 0, Rotation3d.kZero);
-    public static final Pose3d blueFerryPoseOutpost = new Pose3d(2.1, 6, 0, Rotation3d.kZero);
+  // Locations/pose for scoring hub and depots to collect balls
+  public static final Pose3d RedHubPose =
+      new Pose3d(
+          Units.inchesToMeters(469.11),
+          Units.inchesToMeters(158.84),
+          Units.inchesToMeters(72.0),
+          new Rotation3d());
+  public static final Pose3d BlueHubPose =
+      new Pose3d(
+          Units.inchesToMeters(182.11),
+          Units.inchesToMeters(158.84),
+          Units.inchesToMeters(72.0),
+          new Rotation3d());
+  public static final Pose3d redFerryPoseDepot = new Pose3d(14.3, 6, 0, Rotation3d.kZero);
+  public static final Pose3d redFerryPoseOutpost = new Pose3d(14.3, 2, 0, Rotation3d.kZero);
+  public static final Pose3d blueFerryPoseDepot = new Pose3d(2.1, 2, 0, Rotation3d.kZero);
+  public static final Pose3d blueFerryPoseOutpost = new Pose3d(2.1, 6, 0, Rotation3d.kZero);
 }
